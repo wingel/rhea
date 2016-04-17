@@ -44,9 +44,9 @@ def vga_sync(
       
       vga.hsync : horizontal sync
       vga.vsync : vertical sync
-      vga.red   : 
-      vga.green :
-      vga.blue  :
+      vga.red   : red color value
+      vga.green : green color value
+      vga.blue  : blue color value
       
       vmem.hpxl : horizontal pixel address
       vmem.vpxl : vertical pixel address
@@ -64,20 +64,21 @@ def vga_sync(
     ----------
     """
     res = resolution
-    clock = glbl.clock
-    reset = glbl.reset
+    clock, reset = glbl.clock, glbl.reset
 
     # compute the limits (counter limits) for the vsync
     # and hsync timings.  Review the calc_timing function
-    # for definitions of A,B,C,D,E,F,P,Q,R,S, and Z
-    (A,B,C,D,E,F,
-     P,Q,R,S,X,Z,) = calc_timings(clock.frequency, resolution,
-                                  refresh_rate, line_rate)
+    # for definitions of A, B, C, D, E, F, P, Q, R, S, and Z
+    (A, B, C, D, E, F,
+     P, Q, R, S, X, Z,) = calc_timings(clock.frequency, resolution,
+                                       refresh_rate, line_rate)
     # full_screen pixels res[0]*res[1] (should be)
     full_screen = F
 
     # counters to count the pixel clock (clock)
     HPXL, VPXL = res
+
+    # counter variables used to detect the various time areas
     xcnt = intbv(0, min=-1, max=X+1)  # clock div
     hcnt = intbv(0, min=0, max=A+1)   # hor count in ticks
     vcnt = intbv(0, min=0, max=F+1)   # ver count in ticks
@@ -96,12 +97,12 @@ def vga_sync(
     def rtl_sync():    
         # horizontal and vertical counters
         hcnt[:] = hcnt + 1  # horizontal count only
-        vcnt[:] = vcnt + 1  # all pixel count, horizontal and veritical
+        vcnt[:] = vcnt + 1  # all pixel count, horizontal and vertical
         if vcnt == full_screen:
             vcnt[:] = 0
             hcnt[:] = 0
         elif vcnt > R:
-            hcnt[:] = A-1
+             hcnt[:] = A-1
         elif hcnt >= A:
             hcnt[:] = 0
 
@@ -173,11 +174,6 @@ def vga_sync(
             vga.active.next = True
         else:
             vga.active.next = False
-
-    #_state = Signal(intbv(0)[8:])
-    #@always_comb
-    #def tmon():
-    #    _state.next = int(vga.state._val._index)
 
     # map the video memory pixels to the VGA bus
     @always_comb

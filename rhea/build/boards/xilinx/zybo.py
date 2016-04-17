@@ -43,9 +43,19 @@ class Zybo(FPGA):
         # PMODs
         'pmod_jb': dict(pins=('T20', 'U20', 'V20', 'W20',
                               'Y18', 'Y19', 'W18', 'W19',),
-                    iostandard="LVDS_25"),
+                        iostandard="LVDS_25"),
+
+        # VGA (names from the reference manual but lowercase and
+        # with the "vga_" prefix)
+        'vga_red': dict(pins=('M19', 'L20', 'J20', 'G20', 'F19',),
+                        iostandard='LVCMOS33'),
+        'vga_grn': dict(pins=('H18', 'N20', 'L19', 'J19', 'H20', 'F20',),
+                        iostandard='LVCMOS33'),
+        'vga_blu': dict(pins=('P20', 'M20', 'K19', 'J18', 'G19'),
+                        iostandard='LVCMOS33'),
+        'vga_hsync': dict(pins=('P19',), iostandard='LVCMOS33'),
+        'vga_vsync': dict(pins=('R19',), iostandard='LVCMOS33'),
     }
 
     def get_flow(self, top=None):
         return Vivado(brd=self, top=top)
-        

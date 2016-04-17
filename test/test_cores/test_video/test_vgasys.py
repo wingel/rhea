@@ -23,7 +23,7 @@ from rhea.cores.video import VGA
 # a video display model to check the timings
 from rhea.models.video import VGADisplay
 
-from rhea.utils.test import run_testbench
+from rhea.utils.test import run_testbench,  tb_args, tb_default_args
 from rhea.utils.test import skip_long_sim_test
 
 # local wrapper to build a VGA system
@@ -59,7 +59,7 @@ def tb_vgasys(args=None):
     reset = Reset(0, active=0, async=False)
     vselect = Signal(bool(0))
 
-    # intergace to the VGA driver and emulated display 
+    # interface to the VGA driver and emulated display
     vga = VGA(color_depth=color_depth)
 
     def bench_vgasys():
@@ -109,7 +109,7 @@ def tb_vgasys(args=None):
         return tbclk, tbvd, tbstim, tbdut
 
     # run the verification simulation
-    run_testbench(bench_vgasys)
+    run_testbench(bench_vgasys, args=args)
 
 
 @skip_long_sim_test
@@ -122,5 +122,11 @@ if __name__ == '__main__':
                      color_depth=(10, 10, 10),
                      line_rate=4000,
                      refresh_rate=60)
+    args = tb_args()
+    args.resolution = (80, 60)
+    args.color_depth = (10, 10, 10)
+    args.line_rate = 4000
+    args.refresh_rate = 60
+
     tb_vgasys(args)
     convert()

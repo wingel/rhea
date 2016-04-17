@@ -30,7 +30,7 @@ def calc_timings(frequency, resolution,
     
     F : one full screen, ticks
     P : vertical sync, ticks
-    Q : vertical back portch, ticks
+    Q : vertical back porch, ticks
     R : all lines, ticks
     S : vertical front porch, ticks
 
@@ -46,7 +46,7 @@ def calc_timings(frequency, resolution,
           porches (at least back in the day) it isn't that useful to 
           try and match many different mfg standards. The porch 
           determines where the pic is on the screen.  Most monitors 
-          this can be adjusted on the monitory if the pic is not 
+          this can be adjusted on the monitor if the pic is not
           centered.  The above fixed values for the porches worked 
           on a set of hardware tested.
     """
