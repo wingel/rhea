@@ -53,7 +53,8 @@ def calc_timings(frequency, resolution,
     global SUMMERIED
 
     res = resolution
-    # generate the periods in microseconds
+
+    # base on the parameters get the number of ticks
     period = 1/frequency
     hticks = (1/line_rate)/period
     vticks = (1/refresh_rate)/period

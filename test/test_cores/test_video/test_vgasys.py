@@ -55,6 +55,8 @@ def tb_vgasys(args=None):
         line_rate = args.line_rate
         color_depth = args.color_depth
 
+    args = tb_default_args(args)
+
     clock = Clock(0, frequency=1e6)
     reset = Reset(0, active=0, async=False)
     vselect = Signal(bool(0))
