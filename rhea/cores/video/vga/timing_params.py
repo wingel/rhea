@@ -52,6 +52,14 @@ def calc_timings(frequency, resolution,
     """
     global SUMMERIED
 
+    # these are in pixel ticks
+    hor_pulse_width = 4e-6/3
+    hor_back_porch = 2e-6/3
+    hor_front_porch = 1e-6/3
+    # these are in time
+    ver_pulse_width = 2 * (1/line_rate)
+    ver_front_porch = 10 * (1/line_rate)
+
     res = resolution
 
     # base on the parameters get the number of ticks
@@ -60,16 +68,16 @@ def calc_timings(frequency, resolution,
     vticks = (1/refresh_rate)/period
 
     # the line timing in counts of system clock
-    B = round(4e-6/period)       # horizontal pulse width
-    C = round(2e-6/period)       # the back porch time
-    E = round(1e-6/period)       # the front porch
+    B = round(hor_pulse_width/period)       # horizontal pulse width
+    C = round(hor_back_porch/period)       # the back porch time
+    E = round(hor_front_porch/period)       # the front porch
     D = hticks - sum([B, C, E])  # hsync active (1)
     X = round(D/(res[0]))        # pixel clock count
     A = sum([B, C, D, E])        # ticks for a complete line != line_rate
 
-    P = round(64e-6/period)      # vsync pulse width
+    P = round(ver_pulse_width/period)      # vsync pulse width
     R = res[1] * (B+C+D+E)       # all lines
-    S = round(340e-6/period)     # vertical front porch
+    S = round(ver_front_porch/period)     # vertical front porch
     Q = vticks - (P + S + R)     # vertical back porch
     full_screen = sum([P, Q, R, S])
     Q = Q + (full_screen % A)
