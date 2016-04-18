@@ -15,7 +15,7 @@ def zybo_vga(
     vga_hsync, vga_vsync, clock, reset=None,
     # Parameters
     resolution=(800, 600), color_depth=(5, 6, 5),
-    refresh_rate=60, line_rate=31250):
+    refresh_rate=60, line_rate=37880):
     """
     This is a VGA example for the Digilent Zybo board.
 
