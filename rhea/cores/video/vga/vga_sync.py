@@ -101,8 +101,8 @@ def vga_sync(
         if vcnt == full_screen:
             vcnt[:] = 0
             hcnt[:] = 0
-        elif vcnt > R:
-             hcnt[:] = A-1
+        #elif vcnt > R:
+        #     hcnt[:] = A-1
         elif hcnt >= A:
             hcnt[:] = 0
 

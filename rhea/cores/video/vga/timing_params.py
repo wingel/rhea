@@ -70,6 +70,8 @@ def calc_timings(frequency, resolution,
     R = res[1] * (B+C+D+E)       # all lines
     S = round(340e-6/period)     # vertical front porch
     Q = vticks - (P + S + R)     # vertical back porch
+    full_sreen = sum([P, Q, R, S])
+    Q = Q + (full_screen % A)
     F = sum([P, Q, R, S])        # full screen ~= refresh_rate
     # the pixel count (pixel clock)
     Z = res[0]*res[1]

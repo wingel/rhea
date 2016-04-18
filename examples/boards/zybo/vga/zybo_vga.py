@@ -1,5 +1,6 @@
 
-from myhdl import Signal, intbv, always, always_comb
+from myhdl import (Signal, ResetSignal, intbv, always,
+                   always_comb, concat)
 
 from rhea.system import Global
 from rhea.cores.video import VGA
@@ -13,7 +14,7 @@ def zybo_vga(
     led, btn, vga_red, vga_grn, vga_blu,
     vga_hsync, vga_vsync, clock, reset=None,
     # Parameters
-    resolution=(800, 600), color_depth=(5, 6, 5),
+    resolution=(1280, 1024), color_depth=(5, 6, 5),
     refresh_rate=60, line_rate=31250):
     """
     This is a VGA example for the Digilent Zybo board.
@@ -53,10 +54,12 @@ def zybo_vga(
 
     bcnt = Signal(intbv(0, min=0, max=clock.frequency))
     blink = Signal(bool(0))
+
+    nticks = int(clock.frequency-1)
     
     @always(clock.posedge)
     def beh_blink():
-        if bcnt == clock.frequency-1:
+        if bcnt == nticks:
             bcnt.next = 0
             blink.next = not blink
         else:
@@ -66,4 +69,4 @@ def zybo_vga(
     def beh_led():
         led.next = concat("000", blink)
 
-    return bar_inst, vga_inst
+    return bar_inst, vga_inst, beh_blink, beh_led
