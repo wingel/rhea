@@ -17,8 +17,10 @@ class VideoMemory:
         """
 
         self.size = resolution[0] * resolution[1]
-        self.aw = math.ceil(math.log(self.size, 2))  # address width
-        self.width = sum(color_depth)                # width of each memory element
+        # address width
+        self.aw = math.ceil(math.log(self.size, 2))
+        # width of each memory element
+        self.width = sum(color_depth)
 
         # write port strobe for write port
         self.wr = Signal(bool(0))

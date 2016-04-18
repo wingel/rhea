@@ -2,7 +2,10 @@
 from __future__ import division
 from __future__ import print_function
 
+
 SUMMERIED = False
+PARAM_ERR_MSG = """Invalid parameter, make sure the refresh rate and line rate
+are valid for the resolution"""
 
 
 def calc_timings(frequency, resolution,
@@ -23,24 +26,25 @@ def calc_timings(frequency, resolution,
     All of the following are in "counts" but the vendor 
     specifications are usually in us and ms
     A : one full line, ticks
-    B : horizontal sync, ticks
+    B : horizontal sync pulse width, ticks
     C : horizontal back porch, ticks
-    D : RGB pixel , ticks
+    D : RGB pixel active area , ticks
     E : horizontal front porch, ticks
-    
-    F : one full screen, ticks
-    P : vertical sync, ticks
+
+    P : vertical sync pulse width, ticks
     Q : vertical back porch, ticks
     R : all lines, ticks
     S : vertical front porch, ticks
+
+    F : one full screen, ticks
 
     Fixed durations
       horizontal back porch  : ~2us
       horizontal front porch : ~1us
       horizontal sync pulse  : ~4us
       vertical sync pulse    : ~64us
-      vertical back porch    : left overs
       vertical front porch   : ~320-340us
+      vertical back porch    : left overs
 
     Note: because mfgs could specify many different values for the
           porches (at least back in the day) it isn't that useful to 
@@ -52,14 +56,14 @@ def calc_timings(frequency, resolution,
     """
     global SUMMERIED
 
-    # these are in pixel ticks
+    # the horizontal spaces are defined in time
     hor_pulse_width = 4e-6
     hor_back_porch = 2e-6
     hor_front_porch = 1e-6
 
-    # these are in time
-    ver_pulse_width = 2 * (1/line_rate)
-    ver_front_porch = 10 * (1/line_rate)
+    # the vertical spaces are defined in "lines" the value in time
+    ver_pulse_width = 2 * (1/line_rate)    # 2 lines
+    ver_front_porch = 10 * (1/line_rate)   # 10 lines
 
     res = resolution
 
@@ -113,17 +117,19 @@ def calc_timings(frequency, resolution,
         print("   X: pixel clock count .......... %.3f" % (X))
         print("   Z: pixel count: ............... %d pixels" % (Z))
 
-    # @todo: create files for the other languages.
+    params = list(map(int, (A, B, C, D, E, F, P, Q, R, S, X, Z,)))
+
+    for pp in params:
+        assert pp > 0, PARAM_ERR_MSG
     
-    return list(map(int, (A, B, C, D, E, F, P, Q, R, S, X, Z,)))
+    return params
 
 
 def get_timing_dict(frequency, resolution,
                     refresh_rate=60, line_rate=31250):
     """ get the VGA timing parameters in a dictionary
     """
-    tv = calc_timings(frequency, resolution,
-                     refresh_rate, line_rate)
+    tv = calc_timings(frequency, resolution, refresh_rate, line_rate)
     
     tparams = {'A': tv[0],
                'B': tv[1],

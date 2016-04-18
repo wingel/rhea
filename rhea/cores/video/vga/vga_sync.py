@@ -105,8 +105,6 @@ def vga_sync(
         if vcnt == full_screen:
             vcnt[:] = 0
             hcnt[:] = 0
-        #elif vcnt > R:
-        #     hcnt[:] = A-1
         elif hcnt >= A:
             hcnt[:] = 0
 
@@ -182,8 +180,13 @@ def vga_sync(
     # map the video memory pixels to the VGA bus
     @always_comb
     def rtl_map():
-        vga.red.next = vmem.red
-        vga.green.next = vmem.green
-        vga.blue.next = vmem.blue
+        if vga.active:
+            vga.red.next = vmem.red
+            vga.green.next = vmem.green
+            vga.blue.next = vmem.blue
+        else:
+            vga.red.next = 0
+            vga.green.next = 0
+            vga.blue.next = 0
 
     return rtl_sync, rtl_state, rtl_map
