@@ -33,7 +33,7 @@ class VideoMemory:
 
         # the memory, if large, eternal required
         # @todo: check the size, if larger than ?? print warning
-        self.mem = [Signal(intbv(0)[self.width:]) for _ in range(self.size)]
+        # self.mem = [Signal(intbv(0)[self.width:]) for _ in range(self.size)]
 
 
 def video_memory(glbl, vidmem_write, vidmem_read):

@@ -49,7 +49,7 @@ def zybo_vga(
     # rhea.core instances
     bar_inst = color_bars(glbl, vmem, resolution=resolution,
                           color_depth=color_depth)
-    
+
     vga_inst = vga_sync(glbl, vga, vmem, resolution=resolution,
                         refresh_rate=refresh_rate, line_rate=line_rate)
 
