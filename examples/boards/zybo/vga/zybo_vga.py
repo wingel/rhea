@@ -44,11 +44,12 @@ def zybo_vga(
               color_depth=color_depth)
 
     # video memory interface
-    vmem = VideoMemory(color_depth=color_depth)
+    vmem = VideoMemory(resolution=resolution, color_depth=color_depth)
 
     # rhea.core instances
     bar_inst = color_bars(glbl, vmem, resolution=resolution,
                           color_depth=color_depth)
+    
     vga_inst = vga_sync(glbl, vga, vmem, resolution=resolution,
                         refresh_rate=refresh_rate, line_rate=line_rate)
 
