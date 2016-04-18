@@ -58,8 +58,8 @@ def calc_timings(frequency, resolution,
 
     # the horizontal spaces are defined in time
     hor_pulse_width = 4e-6
-    hor_back_porch = 2e-6
-    hor_front_porch = 1e-6
+    hor_back_porch = 3e-6
+    hor_front_porch = 1.5e-6
 
     # the vertical spaces are defined in "lines" the value in time
     ver_pulse_width = 2 * (1/line_rate)    # 2 lines
