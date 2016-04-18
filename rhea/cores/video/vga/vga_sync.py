@@ -37,6 +37,12 @@ def vga_sync(
        refresh_rate     - in Hz, default 60
        line_rate        - in Hz, default is 31,250
 
+    These parameters are attributes of the VGA monitor being
+    driven.  These can be extracted from the monitor.  This
+    driver is intended to drive a single monitor setting, i.e.
+    it cannot be dynamically changed.  The driver can be setup
+    to drive various monitor settings during elaboration/creation.
+
     Ports (arguments):
     ------------------
       glbl.clock : system synchronous clock
@@ -60,8 +66,6 @@ def vga_sync(
       refresh_rate : vertical rate in Hz
       line_rate    : horizontal rate in Hz 
     
-    VGA Timing
-    ----------
     """
     res = resolution
     clock, reset = glbl.clock, glbl.reset
@@ -152,23 +156,23 @@ def vga_sync(
     @always_comb
     def rtl_state():
         if not vga.hsync:
-            vga.state.next = vga.States.HSYNC
+            vga.state.next = vga.states.HSYNC
         elif not vga.vsync:
-            vga.state.next = vga.States.VSYNC
+            vga.state.next = vga.states.VSYNC
         elif hcd < D:
-            vga.state.next = vga.States.ACTIVE
+            vga.state.next = vga.states.ACTIVE
         elif vcd >= R and vcd < (R+S):
-            vga.state.next = vga.States.VER_FRONT_PORCH        
+            vga.state.next = vga.states.VER_FRONT_PORCH
         elif vcd >= (R+S) and vcd < (R+S+P):
             pass # should be handled by above
         elif vcd >= (R+S+P) and vcd < (full_screen):
-            vga.state.next = vga.States.VER_BACK_PORCH
+            vga.state.next = vga.states.VER_BACK_PORCH
         elif hcd >= D and hcd < (D+E):
-            vga.state.next = vga.States.HOR_FRONT_PORCH
+            vga.state.next = vga.states.HOR_FRONT_PORCH
         elif hcd >= (D+E) and hcd < (D+E+B):
             pass # should be handled by above
         elif hcd >= (D+E+B) and hcd < (D+E+B+C):
-            vga.state.next = vga.States.HOR_BACK_PORCH
+            vga.state.next = vga.states.HOR_BACK_PORCH
 
         if hcd < D:
             vga.active.next = True

@@ -14,7 +14,7 @@ from zybo_vga import zybo_vga
 def test_zybo_vga(args=None):
     args = tb_default_args(args)
 
-    resolution= (640, 480,)
+    resolution = (80, 60,)
     refresh_rate = 60
     line_rate = 31250
     color_depth = (6, 6, 6,)
@@ -32,10 +32,8 @@ def test_zybo_vga(args=None):
                          resolution=resolution, color_depth=color_depth,
                          refresh_rate=refresh_rate, line_rate=line_rate)
         tbclk = clock.gen()
-        mdl = VGADisplay(frequency=clock.frequency,
-                         resolution=resolution,
-                         refresh_rate=refresh_rate,
-                         line_rate=line_rate,
+        mdl = VGADisplay(frequency=clock.frequency, resolution=resolution,
+                         refresh_rate=refresh_rate, line_rate=line_rate,
                          color_depth=color_depth)
         tbmdl = mdl.process(glbl, vga)
 
@@ -46,7 +44,11 @@ def test_zybo_vga(args=None):
 
         return tbdut, tbclk, tbmdl, tbstim
 
+    # run the above testbench, the above testbench doesn't functionally
+    # verify anything only verifies basics.
     run_testbench(bench, args=args)
+
+    # test conversion
     portmap = dict(led=led, btn=btn, vga_red=vga_red, vga_grn=vga_green,
                    vga_blu=vga_blue, vga_hsync=vga_hsync, vga_vsync=vga_vsync,
                    clock=clock)

@@ -18,6 +18,7 @@ class VGA:
         # the sync signals
         self.hsync = Signal(bool(1)) if hsync is None else hsync
         self.vsync = Signal(bool(1)) if vsync is None else vsync
+
         # the RGB signals to the video
         cd = color_depth
         self.red = Signal(intbv(0)[cd[0]:]) if red is None else red
@@ -28,8 +29,8 @@ class VGA:
         self.pxlen = Signal(bool(0)) if pxlen is None else pxlen
         self.active = Signal(bool(0)) if active is None else active
 
-        # these are used for verification.
-        self.States = enum('NONE', 'ACTIVE',
+        # these are used for verification and debug only.
+        self.states = enum('NONE', 'ACTIVE',
                            'HOR_FRONT_PORCH', 'HSYNC', 'HOR_BACK_PORCH',
                            'VER_FRONT_PORCH', 'VSYNC', 'VER_BACK_PORCH')
-        self.state = Signal(self.States.ACTIVE)  
+        self.state = Signal(self.states.ACTIVE)

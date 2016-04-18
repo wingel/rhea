@@ -5,10 +5,20 @@ from myhdl import *
 
 class VideoMemory:
     def __init__(self, resolution=(640, 480,), color_depth=(8, 8, 8)):
+        """
+        This interface is used to interface to video memory, it is
+        often used for internal video sources that generate a valid
+        pixel given the pixel coordinates (address)
+
+        Parameters:
+            resolution: the resolution of the screen
+            color_depth: a tuple that represents the number of bits for
+                each color (red, green, and blue)
+        """
 
         self.size = resolution[0] * resolution[1]
         self.aw = math.ceil(math.log(self.size, 2))  # address width
-        self.width = sum(color_depth)           # width of each memory element
+        self.width = sum(color_depth)                # width of each memory element
 
         # write port strobe for write port
         self.wr = Signal(bool(0))

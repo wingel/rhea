@@ -13,7 +13,7 @@ class Zybo(FPGA):
     
     default_clocks = {
         'clock': dict(frequency=125e6, pins=('L16',),
-                  iostandard='LVCMOS33'),
+                      iostandard='LVCMOS33'),
     }
 
     # default_resets = {
@@ -23,11 +23,11 @@ class Zybo(FPGA):
     
     default_ports = {
         'led': dict(pins=('M14', 'M15', 'G14', 'D18',),
-                iostandard='LVCMOS33'),
+                    iostandard='LVCMOS33'),
         'btn': dict(pins=('R18', 'P16', 'V16', 'Y16'),
-                iostandard='LVCMOS33'),
+                    iostandard='LVCMOS33'),
         'sw': dict(pins=('G15', 'P15', 'W13', 'T16',),
-               iostandard='LVCMOS33'),
+                   iostandard='LVCMOS33'),
 
         # audio
         'aubclk': dict(pins=('K18',)),

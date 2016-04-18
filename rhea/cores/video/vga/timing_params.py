@@ -95,7 +95,7 @@ def calc_timings(frequency, resolution,
         print("   R: all lines .................. %d" % (R))
         print("   S: vertical front porch ....... %d" % (S))
         print("   X: pixel clock count .......... %.3f" % (X))
-        print("   Z: pixel count: ............... %d" % (Z))
+        print("   Z: pixel count: ............... %d pixels" % (Z))
 
     # @todo: create files for the other languages.
     
