@@ -1,50 +1,65 @@
 #
 # Copyright (c) 2006-2014 Christopher L. Felton
+# See the licence file in the top directory
 #
 
 from math import ceil, log
+import myhdl
 from myhdl import Signal, intbv, always_comb, always
 
+from rhea.system import Signals
 
-def fifo_mem_generic(wclk, wr, din, addr_w,
-                     rclk, dout, addr_r,
-                     mem_size=9):
+
+def fifo_mem_generic(clock_w, write, write_data, write_addr,
+                     clock_r, read_data, read_addr):
     """ Memory module used by FIFOs
-    Ports
-    =====
+    The write data takes two `clock_w` clock cycles to be latched 
+    into the memory array and one `clock_r` clock cycle to be latched
+    into `read_data`.
 
-    Parameters
-    ==========
-      mem_size: number of item entries in the memory
+    Arguments:
+       clock_w: write clock
+       write: write enable
+       write_data: write
+       write_addr: write address
+       clock_r: read clock
+       read_data: read data
+       read_addr: read address
+
+    Parameters:
+        mem_size (int): number of item entries in the memory.
     """
+    
+    assert len(write_addr) == len(read_addr)
+    addrsize = 2**len(write_addr)
+    assert len(write_data) == len(read_data)
+    datasize = len(write_data)
 
-    Asz = int(ceil(log(mem_size, 2)))
-    assert len(din) == len(dout)
-    Dsz = len(din)
+    # create the list-of-signals to represent the memory array
+    mem = Signals(intbv(0)[datasize:0], addrsize)
 
-    mem = [Signal(intbv(0)[Dsz:]) for ii in range(2**Asz)]
-    _addr_w = Signal(intbv(0)[Asz:])
-    _din = Signal(intbv(0)[Dsz:])
-    _dout = Signal(intbv(0)[Dsz:])
-    _wr = Signal(bool(0))
+    addr_w = Signal(intbv(0)[addrsize:])
+    din = Signal(intbv(0)[datasize:])
+    dout = Signal(intbv(0)[datasize:])
+    wr = Signal(bool(0))
 
     @always_comb
-    def rtl_dout():
-        dout.next = _dout
+    def beh_dataout():
+        read_data.next = dout
 
-    @always(rclk.posedge)
-    def rtl_rd():
-        _dout.next = mem[int(addr_r)]
+    @always(clock_r.posedge)
+    def beh_read():
+        dout.next = mem[int(read_addr)]
 
-    @always(wclk.posedge)
-    def rtl_wr():
-        _wr.next = wr
-        _addr_w.next = addr_w
-        _din.next = din
+    @always(clock_w.posedge)
+    def beh_write_capture():
+        wr.next = write
+        addr_w.next = write_addr
+        din.next = write_data
 
-    @always(wclk.posedge)
-    def rtl_mem():
-        if _wr:
-            mem[int(_addr_w)].next = _din
+    @always(clock_w.posedge)
+    def beh_mem():
+        if wr:
+            mem[int(addr_w)].next = din
 
-    return rtl_dout, rtl_rd, rtl_wr, rtl_mem
+    return myhdl.instances()
