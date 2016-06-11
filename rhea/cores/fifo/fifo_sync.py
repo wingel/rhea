@@ -20,10 +20,9 @@ def fifo_sync(clock, reset, fbus, size=128):
     better to use the `fifo_fast` synchronous FIFO (lower resources).
     
     This FIFO uses a "read acknowledge", the read data is available
-    on the read data bus (write through) before the read strobe is 
-    active.  When the read signal is set it is acknowledging the 
-    data has been read and the next FIFO item will be available on 
-    the bus.  
+    on the read data bus before the read strobe is active.  When the
+    read signal is set it is acknowledging the data has been read
+    and the next FIFO item will be available on the bus.
 
     Arguments:
         clock: system clock
@@ -35,9 +34,9 @@ def fifo_sync(clock, reset, fbus, size=128):
         clock:           /-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_
         fbus.write:      _/---\_______/-----------\___________
         fbus.wrtie_data: -|D1 |-------|D2 |D3 |D4 |
-        fbus.read:        
+        fbus.read:       _____________/---\__
         fbus.read_data:           |D1    |
-        fbus.empty:      ---------\__
+        fbus.empty:      ---------\______/--
 
     Example usage:
         fifobus = FIFOBus(width=16)
