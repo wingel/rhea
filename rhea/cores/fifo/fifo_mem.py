@@ -4,12 +4,14 @@
 #
 
 from math import ceil, log
+
 import myhdl
 from myhdl import Signal, intbv, always_comb, always
 
 from rhea.system import Signals
 
 
+@myhdl.block
 def fifo_mem_generic(clock_w, write, write_data, write_addr,
                      clock_r, read_data, read_addr):
     """ Memory module used by FIFOs
