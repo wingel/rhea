@@ -7,14 +7,14 @@ from math import log, fmod, ceil
 import pytest
 
 import myhdl
-from myhdl import Signal, intbv, modbv, always_comb, always_seq
+from myhdl import Signal, intbv, modbv, enum, always_comb, always_seq
 
 from rhea.system import Signals, FIFOBus
 from .fifo_mem import fifo_mem_generic
 
 
 @myhdl.block
-def fifo_sync(clock, reset, fbus, size=128):
+def fifo_sync(glbl, fbus, size=128):
     """ Synchronous FIFO
     This block is a basic synchronous FIFO.  In many cases it is
     better to use the `fifo_fast` synchronous FIFO (lower resources).
@@ -25,8 +25,7 @@ def fifo_sync(clock, reset, fbus, size=128):
     and the next FIFO item will be available on the bus.
 
     Arguments:
-        clock: system clock
-        reset: system reset
+        glbl: global signals, clock and reset
         fbus (FIFOBus): FIFO bus interface
 
     Example write and read timing:
@@ -43,7 +42,7 @@ def fifo_sync(clock, reset, fbus, size=128):
         fifo_inst = fifo_sync(glbl, fbus, size=128)
         
     """
-
+    clock, reset = glbl.clock, glbl.reset
     fifosize = size
 
     if fmod(log(fifosize, 2), 1) != 0:
@@ -52,69 +51,74 @@ def fifo_sync(clock, reset, fbus, size=128):
         print("@W: fifo_sync only supports power of 2 size")
         print("    forcing size (depth) to %d instread of %d" % (fifosize, fbus.size))
 
-    wptr = Signal(modbv(0, min=0, max=fifosize))
-    rptr = Signal(modbv(0, min=0, max=fifosize))
-    vld = Signal(False)
+    wptr = Signal(modbv(0, min=0, max=fifosize))    # address to write to
+    wptrd = Signal(modbv(0, min=0, max=fifosize))   # aligned write pointer
+    rptr = Signal(modbv(0, min=0, max=fifosize))    # address to read from
 
     # generic memory model, this memory uses two registers on 
     # the input and one on the output, it takes three clock 
     # cycles for write data to appear on the read.
     fifomem_inst = fifo_mem_generic(
         clock, fbus.write, fbus.write_data, wptr,
-        clock, fbus.read_data, rptr,
+        clock, fbus.read, fbus.read_data, rptr, wptrd
     )
 
     # @todo: almost full and almost empty flags
-    read = fbus.read
-    write = fbus.write
-    # takes 3 clock cycles for the write data to be available 
-    # on the read port.
-    empty1, empty2 = Signal(bool(1)), Signal(bool(1))
-    wptr1, wptr2 = Signals(modbv(0, min=0, max=fifosize), 2)
+    read, write = fbus.read, fbus.write
+    states = enum('init', 'empty', 'active', 'full')
+    state = Signal(states.init)
 
     @always_seq(clock.posedge, reset=reset)
     def beh_fifo():
-        # empty is delayed one on writes, in some cases 
-        # this default is overwritten below.
-        empty2.next = empty1
-        fbus.empty.next = empty2
 
-        if fbus.clear:
+        if state == states.init:
             wptr.next = 0
-            wptr1.next = 0
-            wptr2.next = 0
             rptr.next = 0
             fbus.full.next = False
             fbus.empty.next = True
-            # empty1.next = True
-            # empty2.next = True
+            state.next = states.empty
 
-        elif read and not write:
-            fbus.full.next = False
-            if not fbus.empty:
+        elif state == states.empty:
+            if write:
+                wptr.next = wptr + 1
+            state.next = states.active
+
+        elif state == states.active:
+            # once the data is through the fifo_mem pipeline stages
+            # mark the fifo as not empty.  The empty can be overwritten
+            # below if a read occurs and the FIFO should go empty
+            if wptrd != rptr:
+                fbus.empty.next = False
+
+            if read and not write:
+                fbus.full.next = False
+                if not fbus.empty:
+                    rptr.next = rptr + 1
+                if rptr+1 == wptrd:
+                    fbus.empty.next = True
+                    state.next = states.empty
+
+            elif write and not read:
+                if not fbus.full:
+                    wptr.next = wptr + 1
+                if wptr+1 == rptr:
+                    fbus.full.next = True
+                    state.next = states.full
+
+            elif write and read:
+                wptr.next = wptr + 1
                 rptr.next = rptr + 1
 
-        elif write and not read:
-            empty1.next = False
-            if not fbus.full:
-                wptr.next = wptr + 1
+        elif state == states.full:
+            if read and not write:
+                state.next = states.active
+                rptr.next = rptr + 1
 
-        elif write and read:
-            wptr.next = wptr + 1
-            rptr.next = rptr + 1
+        else:
+            state.next = states.init
 
-        if rptr == (wptr2-1):
-            # empty1.next = True
-            # empty2.next = True
-            fbus.empty.next = True
-
-        if wptr2 == (rptr-1):
-            fbus.full.next = True
-            
-
-        wptr1.next = wptr
-        wptr2.next = wptr1
-
+        if fbus.clear:
+            state.next = states.init
 
     @always_comb
     def beh_assign():

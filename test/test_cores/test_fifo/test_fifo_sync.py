@@ -12,7 +12,7 @@ from myhdl import (Signal, ResetSignal, intbv, always, always_comb,
                    instance, delay, StopSimulation,)
 from myhdl.conversion import verify
 
-from rhea.system import Signals, Global
+from rhea.system import Signals, Global, Clock
 from rhea.system import FIFOBus
 from rhea.cores.fifo import fifo_sync
 from rhea.utils.test import run_testbench, tb_default_args, tb_args
@@ -29,14 +29,14 @@ def test_fifo_sync(args=None):
     args = tb_default_args(args)
 
     reset = ResetSignal(0, active=1, async=True)
-    clock = Signal(bool(0))
+    clock = Clock(0, frequency=50e6)
     glbl = Global(clock, reset)
-    fbus = FIFOBus(width=args.width, size=args.size)
+    fbus = FIFOBus(width=args.width)
 
     @myhdl.block
     def bench_fifo_sync():
         
-        tbdut = fifo_sync(clock, reset, fbus)
+        tbdut = fifo_sync(glbl, fbus, size=args.size)
         tbclk = clock.gen()
         
         @instance
@@ -67,8 +67,8 @@ def test_fifo_sync(args=None):
                     assert fbus.full, "FIFO should be full!"
                     assert not fbus.empty, "FIFO should not be empty"
                 
-                #fbus.read.next = True
-                #yield clock.posedge
+                # fbus.read.next = True
+                # yield clock.posedge
                 for ii in range(5):
                     yield clock.posedge
                     if not fbus.empty:
@@ -85,10 +85,6 @@ def test_fifo_sync(args=None):
                 yield clock.posedge
                 assert fbus.empty
 
-            # Test overflows        
-            # Test underflows        
-            # Test write / read same time
-
             raise StopSimulation
 
         w = args.width
@@ -104,18 +100,26 @@ def test_fifo_sync(args=None):
     run_testbench(bench_fifo_sync, args=args)
 
 
+def test_fifo_sync_random():
+    """Test random reads and writes at random times
+    """
+    pass
+
+
 def test_fifo_sync_conversion():
     # @todo: if the myhdl version is 1.0 or greater 
     #        use "iverilog"
     verify.simulator = "iverilog"
     args = Namespace(width=8, size=16, name='test')
 
+    @myhdl.block
     def bench():
         reset = ResetSignal(0, active=1, async=True)
         clock = Signal(bool(0))
-        fbus = FIFOBus(width=args.width, size=args.size)
+        glbl = Global(clock, reset)
+        fbus = FIFOBus(width=args.width)
         
-        tbdut = fifo_sync(clock, reset, fbus)
+        tbdut = fifo_sync(glbl, fbus, size=args.size)
 
         @instance
         def tbclk():
@@ -220,8 +224,9 @@ def test_fifo_sync_conversion():
 
         return tbdut, tbclk, tbstim, tbmon
 
-    myhdl.toVerilog.directory = None
-    assert verify(bench) == 0
+    inst = bench()
+    inst.convert(hdl='Verilog', directory=None)
+    assert inst.verify_convert() == 0
 
 
 if __name__ == '__main__':
