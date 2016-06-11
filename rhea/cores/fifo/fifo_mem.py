@@ -4,6 +4,7 @@
 #
 
 from math import ceil, log
+
 import myhdl
 from myhdl import Signal, intbv, always_comb, always
 

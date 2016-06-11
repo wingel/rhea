@@ -12,7 +12,7 @@ from myhdl import (Signal, ResetSignal, intbv, always, always_comb,
                    instance, delay, StopSimulation,)
 from myhdl.conversion import verify
 
-from rhea.system import Signals
+from rhea.system import Signals, Global
 from rhea.system import FIFOBus
 from rhea.cores.fifo import fifo_sync
 from rhea.utils.test import run_testbench, tb_default_args, tb_args
@@ -30,15 +30,14 @@ def test_fifo_sync(args=None):
 
     reset = ResetSignal(0, active=1, async=True)
     clock = Signal(bool(0))
+    glbl = Global(clock, reset)
     fbus = FIFOBus(width=args.width, size=args.size)
 
+    @myhdl.block
     def bench_fifo_sync():
         
         tbdut = fifo_sync(clock, reset, fbus)
-
-        @always(delay(10))
-        def tbclk():
-            clock.next = not clock
+        tbclk = clock.gen()
         
         @instance
         def tbstim():

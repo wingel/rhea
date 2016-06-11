@@ -26,19 +26,15 @@ def run_testbench(bench, timescale='1ns', args=None):
     """
     if args is None:
         args = argparse.Namespace(trace=False)
-    vcd = tb_clean_vcd(bench.__name__)
+        vcd = tb_clean_vcd(bench.__name__)
+
+    inst = bench()
     if args.trace:
-        traceSignals.timescale = timescale
-        traceSignals.name = vcd
-        gens = traceSignals(bench)
-    else:
-        gens = bench()
+        inst.sim_config(
+            trace=True, name=vcd, timescale=timescale)
 
-    sim = Simulation(gens)
-    sim.run()
-    del gens
-    del sim
-
+    inst.sim_run()
+    del inst
 
 def tb_convert(toplevel, *ports, **params):
     if not os.path.isdir('output/ver/'):
