@@ -4,13 +4,11 @@
 
 from math import log, fmod, ceil
 
-import pytest
-
 import myhdl
 from myhdl import Signal, intbv, modbv, enum, always_comb, always_seq
 
-from rhea.system import Signals, FIFOBus
-from .fifo_mem import fifo_mem_generic
+from rhea.system import FIFOBus
+from .fifo_mem import fifo_mem
 
 
 @myhdl.block
@@ -30,12 +28,12 @@ def fifo_sync(glbl, fbus, size=128):
 
     Example write and read timing:
     
-        clock:           /-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_
+        clock:           /-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_/-\_/
         fbus.write:      _/---\_______/-----------\___________
-        fbus.wrtie_data: -|D1 |-------|D2 |D3 |D4 |
-        fbus.read:       _____________/---\__
-        fbus.read_data:           |D1    |
-        fbus.empty:      ---------\______/--
+        fbus.wrtie_data: -|D1 |-------|D2 |D3 |D4 |-----------
+        fbus.read:       _____________/---\___________________
+        fbus.read_data:           |D1    |--------------------
+        fbus.empty:      ---------\______/--\_________________
 
     Example usage:
         fifobus = FIFOBus(width=16)
@@ -58,7 +56,7 @@ def fifo_sync(glbl, fbus, size=128):
     # generic memory model, this memory uses two registers on 
     # the input and one on the output, it takes three clock 
     # cycles for write data to appear on the read.
-    fifomem_inst = fifo_mem_generic(
+    fifomem_inst = fifo_mem(
         clock, fbus.write, fbus.write_data, wptr,
         clock, fbus.read, fbus.read_data, rptr, wptrd
     )
@@ -124,34 +122,34 @@ def fifo_sync(glbl, fbus, size=128):
     def beh_assign():
         fbus.read_valid.next = fbus.read and not fbus.empty
                 
-    # @todo: add an option to remove counters
-    #        the counters add extra checks and will assert
-    #        (fail in simulation) if a write occurs when 
-    #        full, some applications are ok with dropping 
-    #        data on full writes or empty reads, in those 
-    #        rare cases provide a means to disable the 
-    #        counters.
-    nvacant = Signal(intbv(fifosize, min=-0, max=fifosize+1))  
-    ntenant = Signal(intbv(0, min=-0, max=fifosize+1))  
-    
-    @always_seq(clock.posedge, reset=reset)
-    def dbg_occupancy():
-        if fbus.clear:
-            nvacant.next = fifosize   # the number of empty slots
-            ntenant.next = 0          # the number of full slots
-        else:
-            v = int(nvacant)
-            f = int(ntenant)
-            
-            if fbus.read_valid:
-                v = v + 1
-                f = f - 1
-            if fbus.write:
-                v = v -1 
-                f = f + 1
+    nitems = fifosize
+    if fifo_sync.occupancy_assertions:
+        nvacant = Signal(intbv(fifosize, min=0, max=nitems+1))  # # empty slots
+        ntenant = Signal(intbv(0, min=0, max=nitems+1))         # # filled slots
+    else:
+        nitems = int(2 ** (ceil(log(nitems, 2))))
+        nvacant = Signal(modbv(nitems, min=0, max=nitems))
+        ntenant = Signal(modbv(0, min=0, max=nitems))
 
-            nvacant.next = v
-            ntenant.next = f
+    if fifo_sync.debug:
+        @always_seq(clock.posedge, reset=reset)
+        def dbg_occupancy():
+            if fbus.clear:
+                nvacant.next = fifosize   # the number of empty slots
+                ntenant.next = 0          # the number of full slots
+            else:
+                v = int(nvacant)
+                f = int(ntenant)
+
+                if fbus.read_valid:
+                    v = v + 1
+                    f = f - 1
+                if fbus.write:
+                    v = v -1
+                    f = f + 1
+
+                nvacant.next = v
+                ntenant.next = f
 
     # the FIFOBus count references the local signal
     fbus.count = ntenant
@@ -163,3 +161,5 @@ def fifo_sync(glbl, fbus, size=128):
 
 # attached a generic fifo bus object to the module
 fifo_sync.fbus_intf = FIFOBus
+fifo_sync.debug = True
+fifo_sync.occupancy_assertions = True

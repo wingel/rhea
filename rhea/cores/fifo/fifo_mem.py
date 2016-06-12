@@ -12,8 +12,8 @@ from rhea.system import Signals
 
 
 @myhdl.block
-def fifo_mem_generic(clock_w, write, write_data, write_addr,
-                     clock_r, read, read_data, read_addr, write_addr_delayed):
+def fifo_mem(clock_w, write, write_data, write_addr,
+             clock_r, read, read_data, read_addr, write_addr_delayed):
     """ Memory module used by FIFOs
     The write data takes two `clock_w` clock cycles to be latched 
     into the memory array and one `clock_r` clock cycle to be latched

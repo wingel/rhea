@@ -19,7 +19,7 @@ def _add_bus(fb, name=''):
 
 
 class FIFOBus(Streamers):
-    def __init__(self, size=16, width=8):
+    def __init__(self, width=8):
         """ A FIFO interface
         This interface encapsulates the signals required to interface
         to a FIFO.  This object also contains the configuration
@@ -49,11 +49,13 @@ class FIFOBus(Streamers):
         self.read_valid = Signal(bool(0))
         self.empty = Signal(bool(1))                # fifo empty
         self.full = Signal(bool(0))                 # fifo full
-        self.count = Signal(intbv(0, min=0, max=size+1))
+
+        # The FIFO instance will attached the FIFO count
+        self.count = None
 
         self.width = width
-        self.size = size
 
+        # keep track of all the FIFOBus used.
         _add_bus(self, self.name)
         
     def __str__(self):
