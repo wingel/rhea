@@ -1,17 +1,18 @@
 #
 # Copyright (c) 2014 Christopher L. Felton
+# See the licence file in the top directory
 #
 
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 from argparse import Namespace
 
 import myhdl
 from myhdl import (Signal, ResetSignal, intbv, modbv, delay, instance,
                    always, always_comb, StopSimulation)
+from myhdl.conversion import verify
 
-from rhea.system import Clock, FIFOBus
+from rhea.system import Clock, FIFOBus, Global, Signals
 from rhea.cores.fifo import fifo_async
 
 from rhea.utils.test import run_testbench
@@ -76,6 +77,8 @@ def procuder_consumer(clock_write, clock_read, fbus, start):
                 for _ in range(10):
                     yield clock_read.posedge
                 raise err
+
+    return myhdl.instances()
 
 
 def test_async_fifo(args=None):
@@ -159,6 +162,7 @@ def test_(args=None):
     fbus = FIFOBus(width=args.width)
     start = Signal(bool(0))
 
+    @myhdl.block
     def bench_():
         tbclkw = wclk.gen()
         tbclkr = rclk.gen()
@@ -184,6 +188,57 @@ def test_(args=None):
         return myhdl.instances()
 
     run_testbench(bench_)
+
+
+def test_fifo_async_conversion():
+    args = Namespace(width=8, size=32, name='test')
+
+    clock_write, clock_read = Signals(bool(0), 2)
+    reset = ResetSignal(0, active=1, async=False)
+
+    @myhdl.block
+    def bench_conversion_fifo_async():
+        glbl = Global()
+        fbus = FIFOBus(width=args.width)
+        tbdut = fifo_async(clock_write, clock_read, fbus, reset, size=64)
+
+        @instance
+        def tbclkr():
+            clock_read.next = False
+            while True:
+                clock_read.next = not clock_read
+                yield delay(5)
+
+        @instance
+        def tbclkw():
+            clock_write.next = False
+            while True:
+                clock_write.next = not clock_write
+                yield delay(5)
+
+        @instance
+        def tbstim():
+            print("start simulation")
+            fbus.write.next = False
+            fbus.write_data.next = 0
+            fbus.read.next = False
+            fbus.clear.next = False
+            reset.next = reset.active
+            yield delay(10)
+            reset.next = not reset.active
+            yield delay(10)
+
+            for ii in range(10):
+                yield clock_write.posedge
+
+            print("end simulation")
+
+        return myhdl.instances()
+
+    verify.simulator = 'iverilog'
+    inst = bench_conversion_fifo_async()
+    inst.convert(hdl='Verilog', directory=None)
+    assert inst.verify_convert() == 0
 
 
 if __name__ == '__main__':

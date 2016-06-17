@@ -1,8 +1,11 @@
-
+#
 # Copyright (c) 2014 Christopher L. Felton
+# See the licence file in the top directory
 #
 
 from math import log, fmod, ceil
+
+import pytest
 
 import myhdl
 from myhdl import Signal, intbv, modbv, enum, always_comb, always_seq

@@ -1,11 +1,14 @@
 #
 # Copyright (c) 2014 Christopher L. Felton
+# See the licence file in the top directory
 #
 
 from __future__ import division, print_function
 
 import os
 from argparse import Namespace
+
+import pytest
 
 import myhdl
 from myhdl import (Signal, ResetSignal, intbv, always, always_comb,
@@ -106,14 +109,15 @@ def test_fifo_sync_random():
     pass
 
 
+@pytest.mark.xfail()
 def test_fifo_sync_conversion():
     # @todo: if the myhdl version is 1.0 or greater 
     #        use "iverilog"
-    verify.simulator = "iverilog"
+    verify.simulator = 'iverilog'
     args = Namespace(width=8, size=16, name='test')
 
     @myhdl.block
-    def bench():
+    def bench_convserion_fifo_sync():
         reset = ResetSignal(0, active=1, async=True)
         clock = Signal(bool(0))
         glbl = Global(clock, reset)
@@ -150,7 +154,7 @@ def test_fifo_sync_conversion():
             yield clock.posedge
             fbus.write.next = False
             yield clock.posedge
-            print("%d, %d, %d, %d, should not be empty"  % (
+            print("%d, %d, %d, %d, should not be empty" % (
                 fbus.read, fbus.write, fbus.empty, fbus.full,))
             assert not fbus.empty
             print("FIFO count %d  (%d%d%d%d)" % (
@@ -224,7 +228,7 @@ def test_fifo_sync_conversion():
 
         return tbdut, tbclk, tbstim, tbmon
 
-    inst = bench()
+    inst = bench_convserion_fifo_sync()
     inst.convert(hdl='Verilog', directory=None)
     assert inst.verify_convert() == 0
 
@@ -233,6 +237,6 @@ if __name__ == '__main__':
     args = tb_args()
     args.width, args.size = 8, 8
     test_fifo_sync(args=args)
-    #for size in (16, 64, 256):
-    #    args = Namespace(width=8, size=size, name='test')
-    #    test_fifo_sync(args=args)
+    # for size in (16, 64, 256):
+    #     args = Namespace(width=8, size=size, name='test')
+    #     test_fifo_sync(args=args)

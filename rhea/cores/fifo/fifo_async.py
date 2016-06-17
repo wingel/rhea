@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2006-2014 Christopher L. Felton
+# See the licence file in the top directory
 #
 
 from __future__ import absolute_import
@@ -67,10 +68,12 @@ def fifo_async(clock_write, clock_read, fbus, reset, size=128):
         fbus.full.next = wfull
 
     _we = Signal(bool(0))
+    _re = Signal(bool(0))
 
     @always_comb
     def beh_wr():
         _we.next = fbus.write and not fbus.full
+        _re.next = False
 
     # unused but needed for the fifo_mem block
     wad = Signal(waddr.val)
@@ -79,8 +82,7 @@ def fifo_async(clock_write, clock_read, fbus, reset, size=128):
     # Memory for the FIFO
     g_fifomem = fifo_mem(
         clock_write, _we, fbus.write_data, waddr,
-        clock_read, fbus.read_data,  raddr, wad,
-        mem_size=size
+        clock_read, _re, fbus.read_data,  raddr, wad
     )
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

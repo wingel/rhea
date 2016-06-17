@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2014 Christopher L. Felton
+# See the licence file in the top directory
 #
 
 from math import log, ceil
@@ -12,7 +13,7 @@ from .fifo_srl import fifo_srl
 
 
 @myhdl.block
-def fifo_fast(glbl, fbus, use_srl_prim=False):
+def fifo_fast(glbl, fbus, size=16, use_srl_prim=False):
     """
     Often small simple, synchronous, FIFOs can be implemented with 
     specialized hardware in an FPGA (e.g. vertically chaining LUTs).
@@ -45,11 +46,11 @@ def fifo_fast(glbl, fbus, use_srl_prim=False):
     nitems = 32   # default and max size
     if use_srl_prim:
         nitems = 16
-    elif fbus.size > nitems:
+    elif size > nitems:
         print("@W: fifo_fast only supports size < {}, for fast".format(nitems))
         print("    forcing size (depth) to {}".format(nitems))
     else:
-        nitems = fbus.size
+        nitems = size
 
     mem = [Signal(intbv(0)[fbus.width:]) for _ in range(nitems)]
     addr = Signal(intbv(0, min=0, max=nitems))
