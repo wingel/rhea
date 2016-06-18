@@ -109,127 +109,131 @@ def test_fifo_sync_random():
     pass
 
 
-@pytest.mark.xfail()
-def test_fifo_sync_conversion():
-    # @todo: if the myhdl version is 1.0 or greater 
-    #        use "iverilog"
-    verify.simulator = 'iverilog'
+@myhdl.block
+def bench_convserion_fifo_sync():
     args = Namespace(width=8, size=16, name='test')
+    reset = ResetSignal(0, active=1, async=True)
+    clock = Signal(bool(0))
+    glbl = Global(clock, reset)
+    fbus = FIFOBus(width=args.width)
 
-    @myhdl.block
-    def bench_convserion_fifo_sync():
-        reset = ResetSignal(0, active=1, async=True)
-        clock = Signal(bool(0))
-        glbl = Global(clock, reset)
-        fbus = FIFOBus(width=args.width)
-        
-        tbdut = fifo_sync(glbl, fbus, size=args.size)
+    tbdut = fifo_sync(glbl, fbus, size=args.size)
 
-        @instance
-        def tbclk():
-            clock.next = False
-            while True:
-                yield delay(5)
-                clock.next = not clock
+    @instance
+    def tbclk():
+        clock.next = False
+        while True:
+            yield delay(5)
+            clock.next = not clock
 
-        @instance
-        def tbstim():            
-            print("start simulation")
-            fbus.read.next = False
-            fbus.write.next = False
-            fbus.clear.next = False
-            fbus.write_data.next = 0
-            reset.next = True
-            yield delay(20)
-            reset.next = False
-            yield clock.posedge
-            
-            print("r, w, e, f")
-            print("%d, %d, %d, %d, should be empty"  % (
-                fbus.read, fbus.write, fbus.empty, fbus.full,))
-            assert fbus.empty
+    @instance
+    def tbstim():
+        print("start simulation")
+        fbus.read.next = False
+        fbus.write.next = False
+        fbus.clear.next = False
+        fbus.write_data.next = 0
+        reset.next = True
+        yield delay(20)
+        reset.next = False
+        yield clock.posedge
 
-            fbus.write.next = True
-            fbus.write_data.next = 0xAA
-            yield clock.posedge
-            fbus.write.next = False
-            yield clock.posedge
-            print("%d, %d, %d, %d, should not be empty" % (
-                fbus.read, fbus.write, fbus.empty, fbus.full,))
-            assert not fbus.empty
-            print("FIFO count %d  (%d%d%d%d)" % (
-                fbus.count, fbus.read, fbus.write, fbus.empty, fbus.full)) 
+        print("r, w, e, f")
+        print("%d, %d, %d, %d, should be empty" % (
+            fbus.read, fbus.write, fbus.empty, fbus.full,))
+        assert fbus.empty
 
-            print("more writes")
-            fbus.write.next = True
-            fbus.write_data.next = 1
-            for ii in range(15):
-                yield clock.posedge
-                print("FIFO count %d  (%d%d%d%d)" % (
-                    fbus.count, fbus.read, fbus.write, fbus.empty, fbus.full)) 
-                fbus.write_data.next = ii + 2
-            fbus.write.next = False
+        fbus.write.next = True
+        fbus.write_data.next = 0xAA
+        yield clock.posedge
+        fbus.write.next = False
+        yield clock.posedge
+        print("%d, %d, %d, %d, should not be empty" % (
+            fbus.read, fbus.write, fbus.empty, fbus.full,))
+        assert not fbus.empty
+        print("FIFO count %d  (%d%d%d%d)" % (
+            fbus.count, fbus.read, fbus.write, fbus.empty, fbus.full))
+
+        print("more writes")
+        fbus.write.next = True
+        fbus.write_data.next = 1
+        for ii in range(15):
             yield clock.posedge
             print("FIFO count %d  (%d%d%d%d)" % (
-                fbus.count, fbus.read, fbus.write, fbus.empty, fbus.full)) 
+                fbus.count, fbus.read, fbus.write, fbus.empty, fbus.full))
+            fbus.write_data.next = ii + 2
+        fbus.write.next = False
+        yield clock.posedge
+        print("FIFO count %d  (%d%d%d%d)" % (
+            fbus.count, fbus.read, fbus.write, fbus.empty, fbus.full))
+        yield clock.posedge
+        print("%d, %d, %d, %d, should be full" % (
+            fbus.read, fbus.write, fbus.empty, fbus.full,))
+        # assert fbus.full
+
+        fbus.read.next = True
+        assert fbus.read_data == 0xAA
+        yield fbus.read_valid.posedge
+        fbus.read.next = False
+        yield delay(1)
+        print("%d, %d, %d, %d" % (
+            fbus.read, fbus.write, fbus.empty, fbus.full,))
+        yield clock.posedge
+        yield clock.posedge
+
+        fbus.read.next = True
+        for ii in range(15):
+            print("FIFO count %d  data %d (%d%d%d%d)" % (
+                fbus.count, fbus.read_data, fbus.read, fbus.write,
+                fbus.empty, fbus.full))
             yield clock.posedge
-            print("%d, %d, %d, %d, should be full"  % (
-                fbus.read, fbus.write, fbus.empty, fbus.full,))
-            # assert fbus.full
 
-            fbus.read.next = True
-            assert fbus.read_data == 0xAA
-            yield fbus.read_valid.posedge
-            fbus.read.next = False
-            yield delay(1)
-            print("%d, %d, %d, %d"  % (
-                fbus.read, fbus.write, fbus.empty, fbus.full,))
+        fbus.read.next = False
+        yield clock.posedge
+        print("%d, %d, %d, %d" % (
+            fbus.read, fbus.write, fbus.empty, fbus.full,))
+
+        print("end simulation")
+        raise StopSimulation
+
+    @instance
+    def tbmon():
+        clockticks = 0
+        init_mem = False
+        read_data = 0
+        while True:
+            if not reset:
+                if not init_mem:
+                    read_data = 0
+                else:
+                    read_data = int(fbus.read_data)
+
+                print("%d: %d %d %d %d .. (w) %d %d .. (r) %d %d %d" % (
+                    clockticks,
+                    fbus.clear, fbus.empty, fbus.full, fbus.count,
+                    fbus.write, fbus.write_data,
+                    fbus.read, fbus.read_valid, read_data,
+                ))
+
+            clockticks = clockticks + 1
+            if not fbus.empty:
+                init_mem = True
             yield clock.posedge
-            yield clock.posedge
 
-            fbus.read.next = True
-            for ii in range(15):
-                print("FIFO count %d  data %d (%d%d%d%d)" % (
-                    fbus.count, fbus.read_data, fbus.read, fbus.write, 
-                    fbus.empty, fbus.full)) 
-                yield clock.posedge
+    return tbdut, tbclk, tbstim, tbmon
 
-            fbus.read.next = False
-            yield clock.posedge
-            print("%d, %d, %d, %d"  % (
-                fbus.read, fbus.write, fbus.empty, fbus.full,))
 
-            print("end simulation")
-            raise StopSimulation
-
-        @instance
-        def tbmon():
-            clockticks = 0
-            init_mem = False
-            read_data = 0
-            while True:
-                if not reset:           
-                    if not init_mem:
-                        read_data = 0
-                    else:
-                        read_data = int(fbus.read_data)
-
-                    print("%d: %d %d %d %d .. (w) %d %d .. (r) %d %d %d" % (
-                        clockticks,
-                        fbus.clear, fbus.empty, fbus.full, fbus.count,
-                        fbus.write, fbus.write_data,
-                        fbus.read, fbus.read_valid, read_data,
-                    ))
-
-                clockticks = clockticks + 1
-                if not fbus.empty:
-                    init_mem = True
-                yield clock.posedge
-
-        return tbdut, tbclk, tbstim, tbmon
-
+def test_fifo_sync_conversion():
+    # need this to set the output directory can't be
+    # included in the test_fifo_sync_verify
     inst = bench_convserion_fifo_sync()
     inst.convert(hdl='Verilog', directory=None)
+
+
+@pytest.mark.xfail()
+def test_fifo_sync_verify():
+    verify.simulator = 'iverilog'
+    inst = bench_convserion_fifo_sync()
     assert inst.verify_convert() == 0
 
 
@@ -237,6 +241,3 @@ if __name__ == '__main__':
     args = tb_args()
     args.width, args.size = 8, 8
     test_fifo_sync(args=args)
-    # for size in (16, 64, 256):
-    #     args = Namespace(width=8, size=size, name='test')
-    #     test_fifo_sync(args=args)

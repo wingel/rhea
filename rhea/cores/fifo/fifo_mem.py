@@ -5,7 +5,8 @@
 
 
 import myhdl
-from myhdl import Signal, modbv, intbv, always_comb, always
+from myhdl import Signal, ResetSignal, modbv, intbv
+from myhdl import always_comb, always, always_seq
 from myhdl import instance, delay, StopSimulation
 from myhdl.conversion import analyze, verify
 from rhea.system import Signals
@@ -42,6 +43,9 @@ def fifo_mem(clock_w, write, write_data, write_addr,
     memsize = 2**len(write_addr)
     assert len(write_data) == len(read_data)
     datasize = len(write_data)
+    # print("FIFO memory size {}, data width {}, address width {}".format(
+    #     memsize, datasize, addrsize
+    # ))
 
     # create the list-of-signals to represent the memory array
     memarray = Signals(intbv(0)[datasize:0], memsize)
@@ -85,71 +89,4 @@ def fifo_mem(clock_w, write, write_data, write_addr,
     def beh_dataout():
         read_data.next = dout
 
-    return (beh_write_capture, beh_mem_write, beh_write_address_delayed,
-            beh_read_next, beh_mem_read,)
-
-
-def test_conversion():
-    clock = Signal(bool(0))
-    write, read = Signal(bool(0)), Signal(bool(0))
-    write_data, read_data = Signal(intbv(0)[8:0]), Signal(intbv(0)[8:0])
-    write_addr, read_addr = Signal(intbv(0)[8:0]), Signal(intbv(0)[8:0])
-    wad = Signal(intbv(0)[8:0])
-
-    inst = fifo_mem(clock, write, write_data, write_addr,
-    clock, read, read_data, read_addr, wad)
-
-    analyze.simulator = 'iverilog'
-    assert inst.analyze_convert() == 0
-
-
-@myhdl.block
-def bench_convertible():
-    clock = Signal(bool(0))
-    write, read = Signal(bool(0)), Signal(bool(0))
-    write_data, read_data = Signal(intbv(0)[8:0]), Signal(intbv(0)[8:0])
-    write_addr, read_addr = Signal(intbv(0)[8:0]), Signal(intbv(0)[8:0])
-    wad = Signal(intbv(0)[8:0])
-
-    tbdut = fifo_mem(clock, write, write_data, write_addr,
-                      clock, read, read_data, read_addr, wad)
-
-    @instance
-    def tbclk():
-        clock.next = False
-        while True:
-            yield delay(5)
-            clock.next = not clock
-
-    @instance
-    def tbstim():
-        print("start simulation")
-        for ii in range(16):
-            write.next = True
-            write_data.next = ii
-            write_addr.next = ii
-            yield clock.posedge
-            print("%d %d %d" % (ii, write_addr, write_data,))
-        write.next = False
-        yield clock.posedge
-        for ii in range(16):
-            read.next = True
-            read_addr.next = ii
-            # assert read_data == ii
-            yield clock.posedge
-            print("%d %d %d" % (ii, read_addr, read_data,))
-        print("end simulation")
-        raise StopSimulation
-
-    return tbdut, tbclk, tbstim
-
-
-def test_verify_conversion():
-    verify.simulator = 'iverilog'
-    inst = bench_convertible()
-    assert inst.verify_convert() == 0
-
-
-if __name__ == '__main__':
-    test_conversion()
-    test_verify_conversion()
+    return myhdl.instances()

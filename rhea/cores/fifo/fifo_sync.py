@@ -10,6 +10,7 @@ import pytest
 import myhdl
 from myhdl import Signal, intbv, modbv, enum, always_comb, always_seq
 
+from rhea import Global
 from rhea.system import FIFOBus
 from .fifo_mem import fifo_mem
 
@@ -26,8 +27,12 @@ def fifo_sync(glbl, fbus, size=128):
     and the next FIFO item will be available on the bus.
 
     Arguments:
-        glbl: global signals, clock and reset
+        glbl (Global): global signals, clock and reset
         fbus (FIFOBus): FIFO bus interface
+
+    Parameters:
+        size (int): the size of the FIFO, the FIFO will have hold
+            at maximum *size* elements.
 
     Example write and read timing:
     
@@ -43,6 +48,9 @@ def fifo_sync(glbl, fbus, size=128):
         fifo_inst = fifo_sync(glbl, fbus, size=128)
         
     """
+    assert isinstance(glbl, Global)
+    assert isinstance(fbus, FIFOBus)
+
     clock, reset = glbl.clock, glbl.reset
     fifosize = size
 
