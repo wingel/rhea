@@ -1,7 +1,9 @@
 
+import myhdl
 from myhdl import Signal, intbv, always
 
 
+@myhdl.block
 def button_debounce(glbl, bnts, dbnts):
 
     clock = glbl.clock
@@ -9,7 +11,7 @@ def button_debounce(glbl, bnts, dbnts):
     # @todo finish and use m_time_strobe that checks
     #   glbl for a strober
     @always(clock.posedge)
-    def rtl():
+    def beh_capture():
         dbnts.next = bnts
 
-    return rtl
+    return beh_capture

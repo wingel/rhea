@@ -1,7 +1,9 @@
 #
 # Copyright (c) 2013-2015 Christopher L. Felton
+# See the licence file in the top directory
 #
 
+import myhdl
 from myhdl import Signal, intbv, always_comb
 from ..clock import Clock
 from .streamers import Streamers
@@ -93,6 +95,7 @@ class FIFOBus(Streamers):
             data = int(self.read_data)
         self._end_transaction(data)
 
+    @myhdl.block
     def assign_read_write_paths(self, readpath, writepath):
         """
         Assign the signals from the `readpath` to the read signals

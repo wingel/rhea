@@ -1,28 +1,31 @@
 #
 # Copyright (c) 2011-2013 Christopher Felton
+# See the licence file in the top directory
 #
-"""
-The following is the HDL description of the stroby LED.
-This module requires MyHDL >= 0.8.
 
-Full tutorial available at :
+"""
+Full tutorial available at:
 http://www.fpgarelated.com/showarticle/25.php
 """
 
+import myhdl
 from myhdl import Signal, intbv, always_seq, always_comb
 
 
-def led_stroby(
-    # ~~~[Ports]~~~
-    clock,             # input : system sync clock
-    reset,             # input : reset (level determined by RST_LEVEL)
-    leds,              # output : to IO ports drive LEDs
-
-    # ~~~[Parameters]~~~
-    led_rate=333e-3,   # strobe change rate of 333ms
-    num_dumb=4,        # The number of dummy LEDS on each side
-):
+@myhdl.block
+def led_stroby(clock, reset, leds, led_rate=333e-3, num_dumb=4):
     """ strobe the LED
+    This module will create an LED blink pattern that moves a
+    single on LED across a bank of LEDs.
+
+    Arguments:
+        clock: system clock
+        reset: system reset
+        leds: LED bits
+
+    Parameters:
+        led_rate: the rate, in seconds, to blink the LEDs
+        num_dumb: the number of dummy LEDs on each side
     """
 
     # Number of LEDs
@@ -45,7 +48,7 @@ def led_stroby(
     strobe = Signal(False)
 
     @always_seq(clock.posedge, reset=reset)
-    def rtl_beh():
+    def beh():
         # Generate the strobe event, use the "greater
         # than" for initial condition cases.  Count the
         # number of clock ticks that equals the LED strobe rate
@@ -73,8 +76,7 @@ def led_stroby(
                     led_bit_mem.next = led_bit_mem >> 1
 
     @always_comb
-    def rtl_map_output():
+    def beh_map_output():
         leds.next = led_bit_mem[led_bank+num_dumb:num_dumb]
         
-    return rtl_beh, rtl_map_output
-
+    return myhdl.instances()

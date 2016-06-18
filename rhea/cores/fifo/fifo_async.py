@@ -17,7 +17,7 @@ from .fifo_syncers import sync_reset, sync_mbits
 
 
 @myhdl.block
-def fifo_async(clock_write, clock_read, fbus, reset, size=128):
+def fifo_async(clock_write, clock_read, fifobus, reset, size=128):
     """
     The following is a general purpose, platform independent 
     asynchronous FIFO (dual clock domains).
@@ -25,9 +25,8 @@ def fifo_async(clock_write, clock_read, fbus, reset, size=128):
     Cross-clock boundary FIFO, based on:
     "Simulation and Synthesis Techniques for Asynchronous FIFO Design"
 
-    Typically in the "mn" package the FIFOBus interface is used to 
-    describe 
-    Timing:
+    Typically in the "rhea" package the FIFOBus interface is used to
+    interface with the FIFOs
     """
     # @todo: use the clock_write and clock_read from the FIFOBus
     # @todo: interface, make this interface compliant with the
@@ -36,6 +35,7 @@ def fifo_async(clock_write, clock_read, fbus, reset, size=128):
     # for simplification the memory size is forced to a power of 
     # two - full address range, ptr (mem indexes) will wrap
     asz = int(ceil(log(size, 2)))
+    fbus = fifobus   # alias
     
     # an extra bit is used to determine full vs. empty (see paper)
     waddr = Signal(modbv(0)[asz:])
@@ -80,7 +80,7 @@ def fifo_async(clock_write, clock_read, fbus, reset, size=128):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Memory for the FIFO
-    g_fifomem = fifo_mem(
+    fifomem_inst = fifo_mem(
         clock_write, _we, fbus.write_data, waddr,
         clock_read, _re, fbus.read_data,  raddr, wad
     )

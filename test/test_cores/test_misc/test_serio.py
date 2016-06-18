@@ -5,7 +5,7 @@ from argparse import Namespace
 import myhdl
 from myhdl import *
 
-from rhea.system import Clock, Reset
+from rhea.system import Clock, Reset, Signals
 from rhea.cores.misc import io_stub
 from rhea.utils.test import run_testbench, tb_convert
 
@@ -16,12 +16,13 @@ def test(args=None):
 
     clock = Clock(0, frequency=50e6)
     reset = Reset(0, active=0, async=False)
-    sdi, sdo = [Signal(bool(0)) for _ in range(2)]
+    sdi, sdo = Signals(bool(0), 2)
 
-    pin = [Signal(intbv(0)[16:]) for _ in range(1)]
-    pout = [Signal(intbv(0)[16:]) for _ in range(3)]
+    pin = Signals(intbv(0)[16:0], 1)
+    pout = Signals(intbv(0)[16:0], 3)
     valid = Signal(bool(0))
 
+    @myhdl.block
     def bench_serio():
         tbclk = clock.gen()
         tbdut = io_stub(clock, reset, sdi, sdo, pin, pout, valid)
@@ -40,7 +41,7 @@ def test(args=None):
 
             for ii in range(1000):
                 yield clock.posedge
-                assert sdo == False
+                assert not sdo
             assert pin[0] == 0
 
             for pp in pout:
@@ -52,7 +53,7 @@ def test(args=None):
 
             for ii in range(1000):
                 yield clock.posedge
-                assert sdo == True
+                assert sdo
             assert pin[0] == 0xFFFF
 
             raise StopSimulation
@@ -61,7 +62,14 @@ def test(args=None):
 
     run_testbench(bench_serio, args=args)
 
+
+def test_conversion():
+    clock = Clock(0, frequency=50e6)
+    reset = Reset(0, active=0, async=False)
+    sdi, sdo = Signals(bool(0), 2)
+
     # a top-level conversion stub
+    @myhdl.block
     def top_stub(clock, reset, sdi, sdo):
         pin = [Signal(intbv(0)[16:0]) for _ in range(1)]
         pout = [Signal(intbv(0)[16:0]) for _ in range(3)]

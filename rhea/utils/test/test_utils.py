@@ -7,7 +7,6 @@ import argparse
 
 import pytest
 import myhdl
-from myhdl import traceSignals, Simulation
 
 
 skip_long_sim_test = pytest.mark.skipif(reason="long running tests")
@@ -52,16 +51,14 @@ def run_testbench(bench, timescale=None, args=None):
     del inst
 
 
-def tb_convert(toplevel, *ports, **params):
+def tb_convert(inst):
     if not os.path.isdir('output/ver/'):
         os.makedirs('output/ver/')
-    inst = toplevel(*ports, **params)
     inst.convert(hdl='Verilog', directory='output/ver')
 
     if not os.path.isdir('output/vhd/'):
         os.makedirs('output/vhd/')
-    inst = toplevel(*ports, **params)
-    inst.convert(hdl='VHDL', directory='output/ver')
+    inst.convert(hdl='VHDL', directory='output/vhd')
 
 
 def _tb_argparser(tests=None, parser=None):

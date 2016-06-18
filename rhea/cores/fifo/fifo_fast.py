@@ -13,7 +13,7 @@ from .fifo_srl import fifo_srl
 
 
 @myhdl.block
-def fifo_fast(glbl, fbus, size=16, use_srl_prim=False):
+def fifo_fast(glbl, fifobus, size=16, use_srl_prim=False):
     """
     Often small simple, synchronous, FIFOs can be implemented with 
     specialized hardware in an FPGA (e.g. vertically chaining LUTs).
@@ -42,6 +42,7 @@ def fifo_fast(glbl, fbus, size=16, use_srl_prim=False):
     #        can be used for large synchronous fifo as well
 
     clock, reset = glbl.clock, glbl.reset
+    fbus = fifobus  # alias
 
     nitems = 32   # default and max size
     if use_srl_prim:

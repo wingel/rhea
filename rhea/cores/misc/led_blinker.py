@@ -1,15 +1,10 @@
 
-from __future__ import division
-from __future__ import absolute_import
+from __future__ import division, absolute_import
 
+import myhdl
 from myhdl import Signal, intbv, always
-
-from ...system import RegisterFile
-from ...system import Register
-
-from . import led_stroby
-from . import led_count
-from . import led_dance
+from rhea.system import Register, RegisterFile
+from . import led_stroby, led_count, led_dance
 
 
 # create a register file
@@ -27,6 +22,7 @@ reg.add_namedbits('mode', bits=(4, 2), comment="select mode")
 regfile.add_register(reg)
 
 
+@myhdl.block
 def led_blinker(glbl, membus, leds):
     clock = glbl.clock
     # instantiate the register interface module and add the 

@@ -1,10 +1,12 @@
 
+import myhdl
 from myhdl import Signal, intbv, always_seq
 
 from . import button_debounce
 from ..memmap import controller_basic
 
 
+@myhdl.block
 def button_controller(glbl, regbus, btns, led_addr=0x240):
     """ Generate bus cycles from a button input
     This is a non-sensicle module that creates memory-mapped
@@ -20,18 +22,18 @@ def button_controller(glbl, regbus, btns, led_addr=0x240):
     ctl = regbus.get_generic()
 
     # debounce the buttons
-    gbtn = button_debounce(glbl, btns, dbtns)
+    btn_inst = button_debounce(glbl, btns, dbtns)
 
     # use the basic controller defined in the memmap modules
     # this basic controller is very simple, a write strobe 
     # will start a write cycle and a read strobe a read cycle.
-    gctl = controller_basic(ctl, regbus)
+    ctl_inst = controller_basic(ctl, regbus)
 
     # @todo: finish, can't use the write's like they are
     #    but I need a bus agnostic method to read/write
     #    different buses.
     @always_seq(clock.posedge, reset=reset)
-    def rtl():
+    def beh():
         # default values
         ctl.write.next = False
         ctl.read.next = False
@@ -51,4 +53,4 @@ def button_controller(glbl, regbus, btns, led_addr=0x240):
             elif dbtns[3]:
                 ctl.write_data.next = 4
 
-    return gbtn, gctl, rtl
+    return myhdl.instances()

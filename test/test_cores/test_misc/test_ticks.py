@@ -4,17 +4,15 @@ from __future__ import division
 
 import argparse
 
-from myhdl import *
+import myhdl
+from myhdl import Signal, instance, now, StopSimulation
 
 from rhea.system import Global, Clock, Reset
 from rhea.cores.misc import glbl_timer_ticks
 from rhea.utils.test import run_testbench
 
-def test_ticks():
-    tb_ticks(args=argparse.Namespace())
 
-
-def tb_ticks(args=None):
+def test_ticks(args=None):
     user_ms = 16
     hticks = 5
 
@@ -22,7 +20,8 @@ def tb_ticks(args=None):
     reset = Reset(0, active=0, async=True)
     glbl = Global(clock, reset)
 
-    def _bench_ticks():
+    @myhdl.block
+    def bench_ticks():
         tbdut = glbl_timer_ticks(glbl, include_seconds=True, 
                                  user_timer=user_ms)
         tbclk = clock.gen(hticks=hticks)
@@ -50,8 +49,6 @@ def tb_ticks(args=None):
             yield glbl.tick_sec.posedge
             ticksec2 = now()
             
-            # @todo: figure out if the sim ticks are correct
-            # 10k*10 per ms
             sim_tick_ms = (clock.frequency/1000)*(hticks*2)
 
             assert (tickms2 - tickms1) == sim_tick_ms
@@ -62,7 +59,7 @@ def tb_ticks(args=None):
 
         return tbdut, tbclk, tbstim
 
-    run_testbench(_bench_ticks)
+    run_testbench(bench_ticks)
 
 
 if __name__ == '__main__':
