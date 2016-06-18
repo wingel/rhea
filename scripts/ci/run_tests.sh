@@ -1,6 +1,5 @@
 #!/bin/bash
-# set -ev
-set -v
+set -ev
 
 # don't run coverage with pypy
 

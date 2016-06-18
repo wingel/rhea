@@ -37,7 +37,6 @@ install:
 
 env:
   - RUNLONG="false"
-  - RUNLONG="true"
   - COVERAGE="true"
 
 # the longtests still take too long with pypy
@@ -46,7 +45,7 @@ env:
 #    - python: "pypy"
 #  include:
 #    - python: "pypy"
-#      env: RUNLONG="--runlong"
+#      env: RUNLONG="true"
 
 # run the test
 script:
@@ -54,7 +53,6 @@ script:
   - ./scripts/ci/run_tests.sh
 
 after_success:
- # commit the update / latest coverage results
   - coveralls
 
 notifications:
