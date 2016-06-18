@@ -8,6 +8,13 @@ python:
   - "2.7"
   - "pypy"
 
+addons:
+  apt:
+    packages:
+      - build-essential
+      - autoconf
+      - gperf
+      
 cache:
   directories:
   - $HOME/iverilog
@@ -35,9 +42,9 @@ install:
   - pip install Pillow
   - pip install .
 
-env:
-  - RUNLONG="false"
-  - COVERAGE="true"
+# env:
+#   - RUNLONG="false"
+#   - COVERAGE="true"
 
 # the longtests still take too long with pypy
 #matrix:
