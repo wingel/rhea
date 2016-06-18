@@ -192,27 +192,28 @@ def test_(args=None):
 
 @myhdl.block
 def bench_conversion_fifo_async():
-    args = Namespace(width=8, size=32, name='test')
+    args = Namespace(width=8, size=32, fifosize=64, name='test')
 
     clock_write, clock_read = Signals(bool(0), 2)
     reset = ResetSignal(0, active=1, async=False)
 
     fbus = FIFOBus(width=args.width)
-    tbdut = fifo_async(clock_write, clock_read, fbus, reset, size=64)
+    fifosize = args.fifosize
+    tbdut = fifo_async(clock_write, clock_read, fbus, reset, size=fifosize)
 
     @instance
     def tbclkr():
         clock_read.next = False
         while True:
-            clock_read.next = not clock_read
             yield delay(5)
+            clock_read.next = not clock_read
 
     @instance
     def tbclkw():
         clock_write.next = False
         while True:
-            clock_write.next = not clock_write
             yield delay(5)
+            clock_write.next = not clock_write
 
     @instance
     def tbstim():
@@ -221,13 +222,31 @@ def bench_conversion_fifo_async():
         fbus.write_data.next = 0
         fbus.read.next = False
         fbus.clear.next = False
+
+        print("reset")
         reset.next = reset.active
         yield delay(10)
         reset.next = not reset.active
         yield delay(10)
 
+        print("some clock cycles")
         for ii in range(10):
             yield clock_write.posedge
+
+        print("some writes")
+        for ii in range(fifosize):
+            fbus.write.next = True
+            fbus.write_data.next = ii
+            yield clock_write.posedge
+        fbus.write.next = False
+        yield clock_write.posedge
+
+        for ii in range(fifosize):
+            fbus.read.next = True
+            yield clock_read.posedge
+            print("%d %d %d %d" % (
+                fbus.write, fbus.write_data, fbus.read, fbus.read_data,))
+        fbus.read.next = False
 
         print("end simulation")
         raise StopSimulation
@@ -248,3 +267,5 @@ def test_fifo_async_verify():
 
 if __name__ == '__main__':
     test_async_fifo()
+    test_fifo_async_conversion()
+    test_fifo_async_verify()
