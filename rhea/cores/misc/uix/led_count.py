@@ -1,7 +1,7 @@
 
 import myhdl
 from myhdl import Signal, intbv, modbv, always_seq
-from . import assign
+from .. import assign
 
 
 @myhdl.block

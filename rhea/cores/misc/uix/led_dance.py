@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import myhdl
 from myhdl import Signal, intbv, modbv, always_seq, concat
-from . import assign
+from .. import assign
 
 
 @myhdl.block

@@ -7,6 +7,7 @@ from ..fifo import fifo_fast
 from rhea.system import FIFOBus
 
 
+@myhdl.block
 def uartlite(glbl, fifobus, serial_in, serial_out, baudrate=115200):
     """ The top-level for a minimal fixed baud UART
 
@@ -24,14 +25,6 @@ def uartlite(glbl, fifobus, serial_in, serial_out, baudrate=115200):
     Parameters:
         baudrate: the desired baudrate for the UART
 
-    Returns:
-        myhdl generators
-          : syncs of external r/w line to the internal r/t
-          : The actual TX and RX FIFOs
-          : baud strobe instantiation
-          : uart tx and rx generators
-          : map internal FIFOBus to external user FIFOBus
-
     This module is myhdl convertible
     """
     clock, reset = glbl.clock, glbl.reset
@@ -39,13 +32,13 @@ def uartlite(glbl, fifobus, serial_in, serial_out, baudrate=115200):
     tx, rx = Signal(bool(1)), Signal(bool(1))
 
     # the FIFO interfaces for each FIFO path
-    fbustx = FIFOBus(fifobus.size, fifobus.width)
-    fbusrx = FIFOBus(fifobus.size, fifobus.width)
+    fbustx = FIFOBus(fifobus.width)
+    fbusrx = FIFOBus(fifobus.width)
     
     # create synchronizers for the input signals, the output
     # are not needed, guarantee IO registers
-    syncrx_inst = syncro(clock, serial_in, rx)
-    synctx_inst = syncro(clock, tx, serial_out)
+    syncrx_inst = syncro(clock, serial_in, rx, size=16)
+    synctx_inst = syncro(clock, tx, serial_out, size=16)
 
     # FIFOs for tx and rx
     fifo_tx_inst = fifo_fast(reset, clock, fbustx)

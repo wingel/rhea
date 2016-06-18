@@ -2,8 +2,8 @@
 import myhdl
 from myhdl import Signal, intbv, always_seq
 
-from . import button_debounce
-from ..memmap import controller_basic
+from .. import button_debounce
+from rhea.cores.memmap import controller_basic
 
 
 @myhdl.block

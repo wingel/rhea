@@ -7,7 +7,7 @@ from myhdl import Signal, intbv, always_seq
 
 from rhea.system import Signals, Register, RegisterFile
 
-from . import assign
+from .. import assign
 from . import led_stroby, led_count, led_dance
 
 # create a simple register file for the "core"

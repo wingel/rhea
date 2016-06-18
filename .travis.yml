@@ -7,39 +7,11 @@ python:
   - "3.4"
   - "2.7"
   - "pypy"
- 
-addons:
-  apt:
-    source:
-      - ubuntu-toolchain-r-test
-    packages:
-      - build-essential
-      - clang
-      - bison
-      - flex
-      - libreadline-dev
-      - gawk
-      - tcl
-      - tcl-dev
-      - graphviz
-      - xdot
-      - pkg-config
-      - autoconf
-      - gperf
-      - libffi-dev
-      - libftdi-dev
-#    update-alternatives:
-#      - install /usr/bin/gcc gcc /usr/bin/gcc-4.9 50
-#      - install /usr/bin/g++ g++ /usr/bin/g++-4.9 50
-
-# cannot figure out how to get a new version of gcc
-# to build the dependencies.
-# gcc-4.8 ??? why no work?
-# g++-4.8 ??? why no work?
 
 cache:
   directories:
   - $HOME/iverilog
+  - $HOME/ghdl
   - $HOME/icestorm
   - $HOME/arachne-pnr
   - $HOME/yosys
@@ -52,18 +24,9 @@ before_install:
   - ls $HOME/
   - chmod +x ./scripts/ci/install_iverilog.sh
   - ./scripts/ci/install_iverilog.sh
-# these fail to build and install because the inability to 
-# update to gcc >= 4.8
-#  - chmod +x ./scripts/ci/install_icestorm.sh
-#  - ./scripts/ci/install_icestorm.sh
-#  - chmod +x ./scripts/ci/install_arachne.sh
-#  - ./scripts/ci/install_arachne.sh
-  - chmod +x ./scripts/ci/install_yosys.sh
-  - ./scripts/ci/install_yosys.sh
-  - ls $HOME/yosys/
-  - yosys -V
-  
-# command to install dependencies
+
+# command to install dependencies, always using the latest
+# myhdl for the master branch
 install:
   - chmod +x ./scripts/ci/install_myhdl.sh
   - ./scripts/ci/install_myhdl.sh
@@ -71,6 +34,11 @@ install:
   - pip install coveralls
   - pip install Pillow
   - pip install .
+
+env:
+  - RUNLONG="false"
+  - RUNLONG="true"
+  - COVERAGE="true"
 
 # the longtests still take too long with pypy
 #matrix:
@@ -81,20 +49,12 @@ install:
 #      env: RUNLONG="--runlong"
 
 # run the test
-# coverage with pypy hangs
 script:
-  #- rm -f .coverage
-  - cd examples
-  #- coverage run --source=rhea -m pytest --durations=10
-  - py.test --durations=10
-  #- mv .coverage ../.coverage.ex
-  - cd ../test
-  #- coverage run --source=rhea -m pytest $RUNLONG --durations=10
-  - py.test --durations=10
-  #- mv .coverage ../.coverage.mn
-  #- coverage combine
+  - chmod +x ./scripts/ci/run_tests.sh
+  - ./scripts/ci/run_tests.sh
 
 after_success:
+ # commit the update / latest coverage results
   - coveralls
 
 notifications:

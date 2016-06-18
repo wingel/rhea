@@ -77,8 +77,9 @@ def test_conversion():
         stub_inst = io_stub(clock, reset, sdi, sdo, pin, pout, valid)
         return stub_inst
 
-    # convert the design stub 
-    tb_convert(top_stub, clock, reset, sdi, sdo)
+    # convert the design stub
+    inst = top_stub(clock, reset, sdi, sdo)
+    tb_convert(inst)
 
 
 if __name__ == '__main__':

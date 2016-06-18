@@ -53,5 +53,6 @@ clean:
 	rm -f *.log
 	rm -Rf vcd/
 	rm -f *.o
+	rm -f *.pyc
 
 
