@@ -8,7 +8,7 @@ from rhea.system import FIFOBus
 
 
 @myhdl.block
-def uartlite(glbl, fifobus, serial_in, serial_out, baudrate=115200):
+def uartlite(glbl, fifobus, serial_in, serial_out, baudrate=115200, fifosize=16):
     """ The top-level for a minimal fixed baud UART
 
     The function instantiates the various components required for
@@ -37,12 +37,12 @@ def uartlite(glbl, fifobus, serial_in, serial_out, baudrate=115200):
     
     # create synchronizers for the input signals, the output
     # are not needed, guarantee IO registers
-    syncrx_inst = syncro(clock, serial_in, rx, size=16)
-    synctx_inst = syncro(clock, tx, serial_out, size=16)
+    syncrx_inst = syncro(clock, serial_in, rx)
+    synctx_inst = syncro(clock, tx, serial_out)
 
     # FIFOs for tx and rx
-    fifo_tx_inst = fifo_fast(reset, clock, fbustx)
-    fifo_rx_inst = fifo_fast(reset, clock, fbusrx)
+    fifo_tx_inst = fifo_fast(glbl, fbustx, size=fifosize)
+    fifo_rx_inst = fifo_fast(glbl, fbusrx, size=fifosize)
 
     # generate a strobe for the desired baud rate
     baud_inst = uartbaud(glbl, baudce, baudce16, baudrate=baudrate)
