@@ -6,6 +6,9 @@ python:
   - "3.5"
   - "3.4"
   - "2.7"
+# pypy runs super slow with coverage (at least how I am
+# running it), don't run pypy with coverage.  Will need
+# to use the build matrix to only run pypy with no coverage
 #  - "pypy"
 
 addons:
