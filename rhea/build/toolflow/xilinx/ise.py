@@ -60,7 +60,7 @@ class ISE(ToolFlow):
 
                     # additional pin parameters
                     for kp, vp in port.pattr.items():
-                        if kp.lower() in ("pullup",) and vp is True:
+                        if kp.lower() in ("pullup","pulldown") and vp is True:
                             ustr += " | %s " % kp
                         else:
                             ustr += " | %s = %s " % (kp, vp)
