@@ -13,3 +13,4 @@ from ._parallella import Parallella
 from ._sx1 import SX1 
 from ._ufo400 import UFO400 
 from ._xupv2p import XUPV2P 
+from ._sds7102 import SDS7102
