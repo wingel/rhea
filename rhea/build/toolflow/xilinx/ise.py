@@ -78,6 +78,9 @@ class ISE(ToolFlow):
                 ustr += "\n"
         ustr += "#\n"
 
+        if hasattr(self.brd, 'extra_ucf'):
+            ustr += self.brd.extra_ucf
+
         fid = open(self.ucf_file, 'w')
         fid.write(ustr)
         fid.close()
